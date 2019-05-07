@@ -20,8 +20,10 @@
         <script id="shader-fs" type="x-shader/x-fragment">
             precision mediump float;
 
+            uniform vec4 color;
+
             void main(void) {
-                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                gl_FragColor = color;
             }
         </script>
         
@@ -75,7 +77,6 @@
                 return shader;
             }
 
-
             var shaderProgram;
 
             function initShaders() {
@@ -95,14 +96,11 @@
 
                 shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
                 gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-                shaderProgram.vertexTexCoordsAttribute = gl.getAttribLocation(shaderProgram, "aVertexTexCoords");
-                gl.enableVertexAttribArray(shaderProgram.vertexTexCoordsAttribute);
             
                 shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
                 shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
 
-                shaderProgram.textureUniform = gl.getUniformLocation(shaderProgram, "texture");             
+                shaderProgram.colorUniform = gl.getUniformLocation(shaderProgram, "color");             
             }
 
             var mvMatrix = mat4.create();
@@ -113,48 +111,24 @@
                 gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
             }
 
-            var myTexture;
-
-            function setTextureParams(texture) {
-                gl.bindTexture(gl.TEXTURE_2D, texture);
-                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-                gl.bindTexture(gl.TEXTURE_2D, null);
-            }
-
-            function loadTextureOnGPU() {
-
-                myTexture = gl.createTexture();
-                myTexture.image = new Image();
-                myTexture.image.onload = function() {
-                    setTextureParams(myTexture)
-                }
-                myTexture.image.src = "textures/marvel.png";
-            }
-
             function loadModelOnGPU() {
 
-                var request = new XMLHttpRequest();
+                var index = ["Teapot", "Laptop"];
 
-                // Teapot
-                request.open("GET", "models/Teapot.json");
-                request.onreadystatechange = function(){
-                    if (request.readyState == 4){
-                        handleLoadedModel(JSON.parse(request.responseText));
-                    }
-                }
-                request.send();
+                for (var i = 0; i < index.length; ++i) {
 
-                // Laptop
-                request.open("GET", "models/Laptop.json");
-                request.onreadystatechange = function(){
-                    if (request.readyState == 4){
-                        handleLoadedModel(JSON.parse(request.responseText));
+                    var path = "models/" + index[i] + ".json";
+
+                    let request = new XMLHttpRequest();
+                    request.open("GET", path);
+                    request.onreadystatechange = function() {
+                        if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+                            var modelData = JSON.parse(request.responseText);
+                            handleLoadedModel(modelData);
+                        }
                     }
-                }
-                request.send();              
+                    request.send();
+                }          
             }
 
             var modelVertexPositionBuffer;
@@ -201,10 +175,6 @@
   
                 mat4.perspective(fov, gl.viewportWidth / gl.viewportHeight, zNear, zFar, pMatrix);
 
-                gl.activeTexture(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_2D, myTexture);
-                gl.uniform1i(shaderProgram.textureUniform, 0);
-
                 mat4.identity(mvMatrix);
                 mat4.translate(mvMatrix, [translateX, translateY, -dist]);
                 mat4.multiply(mvMatrix, mouseRotationMatrix);
@@ -222,6 +192,10 @@
                     
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer);
                     
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, myTexture);
+                    gl.uniform4f(shaderProgram.colorUniform, [1.0, 0.0, 0.0, 1.0]);
+
                     sendMatricesToShader();
 
                     gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -259,7 +233,6 @@
                 initGL(canvas);
                 initShaders();
  
-                loadTextureOnGPU();
                 loadModelOnGPU();
 
                 gl.clearColor(0.0, 0.0, 0.0, 1.0);
