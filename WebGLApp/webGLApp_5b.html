@@ -23,7 +23,7 @@
             uniform vec4 color;
 
             void main(void) {
-                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                gl_FragColor = color;
             }
         </script>
         
@@ -96,9 +96,6 @@
 
                 shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
                 gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-                shaderProgram.vertexTexCoordsAttribute = gl.getAttribLocation(shaderProgram, "aVertexTexCoords");
-                gl.enableVertexAttribArray(shaderProgram.vertexTexCoordsAttribute);
             
                 shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
                 shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
@@ -113,6 +110,11 @@
                 gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
                 gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
             }
+
+            var modelVertexPositionBuffer;
+            var modelVertexNormalBuffer;
+            var modelVertexTextureCoordBuffer;
+            var modelVertexIndexBuffer;
 
             function loadModelOnGPU() {
 
@@ -132,11 +134,6 @@
                     request.send();
                 }    
             }
-
-            var modelVertexPositionBuffer;
-            var modelVertexNormalBuffer;
-            var modelVertexTextureCoordBuffer;
-            var modelVertexIndexBuffer;
 
             function handleLoadedModel(modelData) {
 
@@ -177,10 +174,6 @@
   
                 mat4.perspective(fov, gl.viewportWidth / gl.viewportHeight, zNear, zFar, pMatrix);
 
-                gl.activeTexture(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_2D, myTexture);
-                gl.uniform1i(shaderProgram.textureUniform, 0);
-
                 mat4.identity(mvMatrix);
                 mat4.translate(mvMatrix, [translateX, translateY, -dist]);
                 mat4.multiply(mvMatrix, mouseRotationMatrix);
@@ -198,6 +191,7 @@
                     
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer);
                     
+                    gl.uniform4fv(shaderProgram.colorUniform, [1.0, 0.0, 0.0, 1.0]);
                     sendMatricesToShader();
 
                     gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
