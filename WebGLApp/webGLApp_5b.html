@@ -111,14 +111,10 @@
                 gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
             }
 
-            var modelVertexPositionBuffer;
-            var modelVertexNormalBuffer;
-            var modelVertexTextureCoordBuffer;
-            var modelVertexIndexBuffer;
-
             function loadModelOnGPU() {
 
                 var index = ["Teapot", "Laptop"];
+
                 for (var i = 0; i < index.length; ++i) {
 
                     var path = "models/" + index[i] + ".json";
@@ -134,38 +130,49 @@
                     request.send();
                 }    
             }
+             
+            var modelVertexPositionBuffer = [];
+            var modelVertexNormalBuffer = [];
+            var modelVertexTextureCoordBuffer = [];
+            var modelVertexIndexBuffer = [];
 
             function handleLoadedModel(modelData) {
 
-                modelVertexNormalBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer);
+                var normalsObj = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, normalsObj);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelData.vertexNormals), gl.STATIC_DRAW);
-                modelVertexNormalBuffer.itemSize = 3;
-                modelVertexNormalBuffer.numItems = modelData.vertexNormals.Length / 3;
-            
-                modelVertexTextureCoordBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexTextureCoordBuffer);
+                normalsObj.itemSize = 3;
+                normalsObj.numItems = modelData.vertexNormals.Length / 3;
+                modelVertexNormalBuffer.push(normalsObj);
+
+                var textureCoordsObj = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordsObj);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelData.vertexTextureCoords), gl.STATIC_DRAW);
-                modelVertexTextureCoordBuffer.itemSize = 2;
-                modelVertexTextureCoordBuffer.numItems = modelData.vertexTextureCoords.length / 2;
+                textureCoordsObj.itemSize = 2;
+                textureCoordsObj.numItems = modelData.vertexTextureCoords.length / 2;
+                modelVertexTextureCoordBuffer.push(textureCoordsObj);
 
-                modelVertexPositionBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer);
+                var positionObj = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionObj);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelData.vertexPositions), gl.STATIC_DRAW);
-                modelVertexPositionBuffer.itemSize = 3;
-                modelVertexPositionBuffer.numItems = modelData.vertexPositions.length / 3;
+                positionObj.itemSize = 3;
+                positionObj.numItems = modelData.vertexPositions.length / 3;
+                modelVertexPositionBuffer.push(positionObj);
 
-                modelVertexIndexBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer);
+                var indexObj = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexObj);
                 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(modelData.indices), gl.STATIC_DRAW);
-                modelVertexIndexBuffer.itemSize = 1;
-                modelVertexIndexBuffer.numItems = modelData.indices.length;
+                indexObj.itemSize = 1;
+                indexObj.numItems = modelData.indices.length;
+                modelVertexIndexBuffer.push(indexObj);
             }
 
             var fov = 45.0;
             var zNear = 0.1;
             var zFar = 300.0;
             var dist = 4.0;
+
+            var colors = [[1.0, 0.5, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0]];
 
             function drawScene() {
 
@@ -178,23 +185,43 @@
                 mat4.translate(mvMatrix, [translateX, translateY, -dist]);
                 mat4.multiply(mvMatrix, mouseRotationMatrix);
 
-                if (modelVertexPositionBuffer)
+                if (modelVertexPositionBuffer[0])
                 {
                     // Draw
                     mvPushMatrix();
                     
                     mat4.translate(mvMatrix, [-1.5, 0.0, 0.0]);
-                    mat4.scale(mvMatrix, [0.1, 0.1, 0.1]);
+                    mat4.scale(mvMatrix, [0.05, 0.05, 0.05]);
 
-                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer);
-                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[0]);
+                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[0].itemSize, gl.FLOAT, false, 0, 0);
                     
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer);
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[0]);
                     
-                    gl.uniform4fv(shaderProgram.colorUniform, [1.0, 0.0, 0.0, 1.0]);
+                    gl.uniform4fv(shaderProgram.colorUniform, colors[0]);
                     sendMatricesToShader();
 
-                    gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+                    gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer[0].numItems, gl.UNSIGNED_SHORT, 0);
+                
+                    mvPopMatrix();
+                }
+
+                if (modelVertexPositionBuffer[1])
+                {
+                    // Draw
+                    mvPushMatrix();
+                    
+                    mat4.translate(mvMatrix, [1.5, 0.0, 0.0]);
+
+                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[1]);
+                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[1].itemSize, gl.FLOAT, false, 0, 0);
+                    
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[1]);
+                    
+                    gl.uniform4fv(shaderProgram.colorUniform, colors[1]);
+                    sendMatricesToShader();
+
+                    gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer[1].numItems, gl.UNSIGNED_SHORT, 0);
                 
                     mvPopMatrix();
                 }
