@@ -8,11 +8,15 @@
 
         <script id="shader-vs" type="x-shader/x-vertex">
             attribute vec3 aVertexPosition;
+            attribute vec3 aVertexNormal;
 
             uniform mat4 uMVMatrix;
             uniform mat4 uPMatrix;
 
+            varying vec3 shadedColor;
+
             void main(void) {
+                shadedColor = aVertexNormal * 0.5 + vec3(0.5);
                 gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);           
             }
         </script>
@@ -20,10 +24,10 @@
         <script id="shader-fs" type="x-shader/x-fragment">
             precision mediump float;
 
-            uniform vec4 color;
+            varying vec3 shadedColor;
 
             void main(void) {
-                gl_FragColor = color;
+                gl_FragColor = vec4(shadedColor, 1.0);
             }
         </script>
         
@@ -96,11 +100,14 @@
 
                 shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
                 gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+                shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
+                gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
             
                 shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
                 shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
 
-                shaderProgram.colorUniform = gl.getUniformLocation(shaderProgram, "color");             
+                shaderProgram.colorUniform = gl.getUniformLocation(shaderProgram, "shadedColor");             
             }
 
             var mvMatrix = mat4.create();
@@ -195,7 +202,9 @@
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[0]);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[0].itemSize, gl.FLOAT, false, 0, 0);
-                    
+                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer[0]);
+                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, modelVertexNormalBuffer[0].itemSize, gl.FLOAT, false, 0, 0);
+
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[0]);
                     
                     gl.uniform4fv(shaderProgram.colorUniform, colors[0]);
@@ -216,7 +225,9 @@
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[1]);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[1].itemSize, gl.FLOAT, false, 0, 0);
-                    
+                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer[1]);
+                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, modelVertexNormalBuffer[1].itemSize, gl.FLOAT, false, 0, 0);
+
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[1]);
                     
                     gl.uniform4fv(shaderProgram.colorUniform, colors[1]);

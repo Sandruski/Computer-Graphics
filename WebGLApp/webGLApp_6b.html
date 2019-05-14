@@ -8,11 +8,37 @@
 
         <script id="shader-vs" type="x-shader/x-vertex">
             attribute vec3 aVertexPosition;
+            attribute vec3 aVertexNormal;
 
+            // Matrices
             uniform mat4 uMVMatrix;
             uniform mat4 uPMatrix;
+            uniform mat3 uNormalMatrix;
+
+            struct Light
+            {
+                uniform vec3 L; // direction
+                uniform vec3 Ia; // ambient intensity
+                uniform vec3 Ip; // diffuse intensity
+            }
+
+            struct Material
+            {
+                uniform vec3 Ka; // ambient color
+                uniform vec3 Kd; // diffuse color
+            }
+
+            uniform Light light;
+            uniform Material material;
+
+            varying vec3 shadedColor;
 
             void main(void) {
+
+                vec3 N = normalize(uNormalMatrix * aVertexNormal);
+                float NdotL = max(dot(N, light.L), 0.0);
+                shadedColor = material.Ka * light.Ia + material.Kd * light.Ip * NdotL;
+
                 gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);           
             }
         </script>
@@ -20,10 +46,10 @@
         <script id="shader-fs" type="x-shader/x-fragment">
             precision mediump float;
 
-            uniform vec4 color;
+            varying vec3 shadedColor;
 
             void main(void) {
-                gl_FragColor = color;
+                gl_FragColor = vec4(shadedColor, 1.0);
             }
         </script>
         
@@ -96,11 +122,21 @@
 
                 shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
                 gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+                shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
+                gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
             
                 shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
                 shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+                //shaderProgram.L_Uniform =  gl.getUniformLocation(shaderProgram, "uNormalMatrix");
 
-                shaderProgram.colorUniform = gl.getUniformLocation(shaderProgram, "color");             
+                shaderProgram.light_L_Uniform = gl.getUniformLocation(shaderProgram, "light.L");
+                shaderProgram.light_Ia_Uniform = gl.getUniformLocation(shaderProgram, "light.Ia");
+                shaderProgram.light_Ip_Uniform = gl.getUniformLocation(shaderProgram, "light.Ip");
+                shaderProgram.material_Ka_Uniform = gl.getUniformLocation(shaderProgram, "material.Ka");
+                shaderProgram.material_Kd_Uniform = gl.getUniformLocation(shaderProgram, "material.Kd");
+
+                shaderProgram.colorUniform = gl.getUniformLocation(shaderProgram, "shadedColor");
             }
 
             var mvMatrix = mat4.create();
@@ -185,6 +221,21 @@
                 mat4.translate(mvMatrix, [translateX, translateY, -dist]);
                 mat4.multiply(mvMatrix, mouseRotationMatrix);
 
+                // Light (directional light)
+                /// Direction
+                var direction = [0.0, 1.0, 0.5];
+                var normalized_L = vec3.create();
+                vec3.normalize(direction, normalized_L);
+                gl.uniform3fv(shaderProgram.light_L_Uniform, normalized_L);
+
+                /// Intensities
+                gl.uniform3f(shaderProgram.light_Ia_Uniform, 0.3, 0.3, 0.3);
+                gl.uniform3f(shaderProgram.light_Ip_Uniform, 0.5, 0.5, 0.5);
+
+                // Surface properties
+                gl.uniform3f(shaderProgram.Ka_Uniform, 1.0, 0.3, 0.0);
+                gl.uniform3f(shaderProgram.Kd_Uniform, 1.0, 0.3, 0.0);
+
                 if (modelVertexPositionBuffer[0])
                 {
                     // Draw
@@ -195,7 +246,9 @@
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[0]);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[0].itemSize, gl.FLOAT, false, 0, 0);
-                    
+                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer[0]);
+                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, modelVertexNormalBuffer[0].itemSize, gl.FLOAT, false, 0, 0);
+
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[0]);
                     
                     gl.uniform4fv(shaderProgram.colorUniform, colors[0]);
@@ -216,7 +269,9 @@
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[1]);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[1].itemSize, gl.FLOAT, false, 0, 0);
-                    
+                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer[1]);
+                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, modelVertexNormalBuffer[1].itemSize, gl.FLOAT, false, 0, 0);
+
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[1]);
                     
                     gl.uniform4fv(shaderProgram.colorUniform, colors[1]);
