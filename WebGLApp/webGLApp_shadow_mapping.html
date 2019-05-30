@@ -198,7 +198,6 @@
             var lightProgram;
 
             function initShaders() {
-
                 // Camera
                 var cameraVertexShader = getShader("camera-vs");
                 var cameraFragmentShader = getShader("camera-fs");
@@ -283,7 +282,7 @@
                 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, rttTexture, 0);
                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 
-                gl.bindTexture(gl.TEXTURE_2D, null);
+                //gl.bindTexture(gl.TEXTURE_2D, null);
                 gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
@@ -312,8 +311,56 @@
                 gl.uniformMatrix4fv(shaderProgram.modelViewMatrixLightUniform, false, mvLightMatrix);
             }
 
-            function loadModelOnGPU() {
+            var quadVertexPositionBuffer;
+            var quadVertexIndexBuffer;
+            var quadVertexNormalBuffer;
 
+            function loadModelOnGPU() {
+                // Quad
+                /// Position
+                quadVertexPositionBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexPositionBuffer);
+                var quadVerticesPosition = [
+                    // Left triangle
+                    -1.0, -1.0, 0.0,
+                    1.0, -1.0, 0.0,
+                    1.0, 1.0, 0.0,
+                    -1.0, 1.0, 0.0
+                ];
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadVerticesPosition), gl.STATIC_DRAW);
+                quadVertexPositionBuffer.itemSize = 3;
+                quadVertexPositionBuffer.numItems = 4;  
+                /// Normal
+                quadVertexNormalBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexNormalBuffer);
+                var quadVerticesNormal = [
+                    // Left triangle
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 0.0
+                ];
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadVerticesNormal), gl.STATIC_DRAW);
+                quadVertexNormalBuffer.itemSize = 3;
+                quadVertexNormalBuffer.numItems = 4;
+                /// Index
+                quadVertexIndexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, quadVertexIndexBuffer);
+                var quadVerticesIndex = [
+                    // Left triangle
+                    0,
+                    1,
+                    2,
+                    // Right triangle
+                    0,
+                    2,
+                    3
+                ];
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(quadVerticesIndex), gl.STATIC_DRAW);
+                quadVertexIndexBuffer.itemSize = 1;
+                quadVertexIndexBuffer.numItems = 6;              
+
+                // Meshes
                 var index = ["Teapot", "Laptop"];
 
                 for (var i = 0; i < index.length; ++i) {
@@ -338,7 +385,6 @@
             var modelVertexIndexBuffer = [];
 
             function handleLoadedModel(modelData) {
-
                 var normalsObj = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, normalsObj);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelData.vertexNormals), gl.STATIC_DRAW);
@@ -378,7 +424,7 @@
 
                 gl.useProgram(lightProgram);
 
-                //gl.enableVertexAttribArray(lightProgram.vertexPositionAttribute);
+                gl.enableVertexAttribArray(lightProgram.vertexPositionAttribute);
 
                 // RENDER SCENE
                 mat4.ortho(pLightMatrix, -5.0, 5.0, -5.0, 5.0, 0.0, 30.0);
@@ -387,6 +433,8 @@
                 mat4.translate(mvLightMatrix, [0.0, 0.0, -lightDist]);
 
                 sendMatricesToLightShader();
+
+                
 
                 // Teapot
                 if (modelVertexPositionBuffer[0])
@@ -412,9 +460,13 @@
                     gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer[1].numItems, gl.UNSIGNED_SHORT, 0);
                 }
 
-                //gl.disableVertexAttribArray(lightProgram.vertexPositionAttribute);
+                // -----
+
+                gl.disableVertexAttribArray(lightProgram.vertexPositionAttribute);
 
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+                gl.useProgram(null);
             }
 
             var fov = 45.0;
@@ -423,13 +475,14 @@
 
             var camDist = 10.0;
 
-            var colors = [[1.0, 0.5, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0]];
-
             function drawSceneFromCamera() {
                 gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   
                 gl.useProgram(shaderProgram);
+
+                gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+                gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
 
                 // RENDER SCENE
                 mat4.perspective(fov, gl.viewportWidth / gl.viewportHeight, zNear, zFar, pMatrix);
@@ -442,6 +495,36 @@
                 gl.uniform3f(shaderProgram.light_Ia_Uniform, 0.3, 0.3, 0.3);
                 gl.uniform3f(shaderProgram.light_Id_Uniform, 0.5, 0.5, 0.5);
                 gl.uniform3f(shaderProgram.light_Is_Uniform, 1.0, 1.0, 1.0);
+
+                // Floor (quad)
+                if (quadVertexPositionBuffer)
+                {
+                    // Surface properties
+                    gl.uniform3f(shaderProgram.material_Ka_Uniform, 0.8, 0.8, 0.8);
+                    gl.uniform3f(shaderProgram.material_Kd_Uniform, 0.8, 0.8, 0.8);
+                    gl.uniform3f(shaderProgram.material_Ks_Uniform, 0.5, 0.5, 0.5);
+                    gl.uniform1f(shaderProgram.material_shininess_Uniform, 32.0);
+
+                    // Draw
+                    mvPushMatrix();
+
+                    mat4.translate(mvMatrix, [0.0, -0.5, 0.0]);
+                    mat4.scale(mvMatrix, [5.0, 0.0, 5.0]);
+                    mat4.rotate(mvMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
+
+                    gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexPositionBuffer);
+                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, quadVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexNormalBuffer);
+                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, quadVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, quadVertexIndexBuffer);
+                    
+                    sendMatricesToCameraShader();
+
+                    gl.drawElements(gl.TRIANGLES, quadVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+                
+                    mvPopMatrix();
+                }
 
                 // Teapot
                 if (modelVertexPositionBuffer[0])
@@ -501,6 +584,13 @@
                 
                     mvPopMatrix();
                 }
+
+                // -----
+
+                gl.disableVertexAttribArray(lightProgram.vertexPositionAttribute);
+                gl.disableVertexAttribArray(lightProgram.vertexNormalAttribute);
+
+                gl.useProgram(null);
             }
 
             var mvMatrixStack = [];
@@ -521,7 +611,7 @@
             function renderingLoop() {
                 requestAnimFrame(renderingLoop);
                 handleKeys();
-                drawSceneFromLight();
+                //drawSceneFromLight();
                 drawSceneFromCamera();
             }
 
@@ -586,7 +676,7 @@
                 translateX = 0;
                 translateY = 0;
                 mat4.identity(mouseRotationMatrix); 
-                dist = 4.0;
+                camDist = 4.0;
                 }
             }
 
@@ -665,7 +755,7 @@
             }
 
             function handleMouseWheel(event){
-                dist += event.deltaY * fixedDt;
+                camDist += event.deltaY * fixedDt;
             }
 
         </script>
