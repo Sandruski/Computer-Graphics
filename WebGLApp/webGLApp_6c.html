@@ -15,40 +15,55 @@
             uniform mat4 uPMatrix;
             uniform mat3 uNormalMatrix;
 
-            struct Light
-            {
-                vec3 L; // direction
-                vec3 Ia; // ambient intensity
-                vec3 Ip; // diffuse intensity
-            };
-
-            struct Material
-            {
-                vec3 Ka; // ambient color
-                vec3 Kd; // diffuse color
-            };
-
-            uniform Light light;
-            uniform Material material;
-
-            varying vec3 shadedColor;
+            varying vec3 normalEye;
+            varying vec4 positionEye;
 
             void main(void) {
 
-                vec3 N = normalize(uNormalMatrix * aVertexNormal);
-                float NdotL = max(dot(N, light.L), 0.0);
-                shadedColor = material.Ka * light.Ia + material.Kd * light.Ip * NdotL;
+                normalEye = normalize(uNormalMatrix * aVertexNormal);
+                positionEye = uMVMatrix * vec4(aVertexPosition, 1.0);
 
-                gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);           
+                gl_Position = uPMatrix * positionEye;           
             }
         </script>
         
         <script id="shader-fs" type="x-shader/x-fragment">
             precision mediump float;
 
-            varying vec3 shadedColor;
+            struct Light
+            {
+                vec3 Ia; // ambient intensity
+                vec3 Id; // diffuse intensity
+                vec3 Is; // specular intensity
+            };
+
+            struct Material
+            {
+                vec3 Ka; // ambient color
+                vec3 Kd; // diffuse color
+                vec3 Ks; // shininess color
+                float shininess; // shininess
+            };
+
+            uniform Light light;
+            uniform Material material;
+
+            varying vec3 normalEye;
+            varying vec4 positionEye;
+
+            const vec3 lightPositionEye = vec3(-1.0, 3.0, 0.0);
 
             void main(void) {
+                vec3 L = normalize(lightPositionEye.xyz - positionEye.xyz);
+                vec3 N = normalize(normalEye);
+                vec3 V = normalize(-positionEye.xyz);
+
+                float NdotL = max(dot(N, L), 0.0);
+
+                vec3 R = reflect(-L, N);
+                float RdotV = pow(max(dot(R, V), 0.0), material.shininess);
+
+                vec3 shadedColor = material.Ka * light.Ia + material.Kd * light.Id * NdotL + material.Ks * light.Is * RdotV;
                 gl_FragColor = vec4(shadedColor, 1.0);
             }
         </script>
@@ -130,11 +145,13 @@
                 shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
                 shaderProgram.nMatrixUniform =  gl.getUniformLocation(shaderProgram, "uNormalMatrix");
 
-                shaderProgram.light_L_Uniform = gl.getUniformLocation(shaderProgram, "light.L");
                 shaderProgram.light_Ia_Uniform = gl.getUniformLocation(shaderProgram, "light.Ia");
-                shaderProgram.light_Ip_Uniform = gl.getUniformLocation(shaderProgram, "light.Ip");
+                shaderProgram.light_Id_Uniform = gl.getUniformLocation(shaderProgram, "light.Id");
+                shaderProgram.light_Is_Uniform = gl.getUniformLocation(shaderProgram, "light.Is");
                 shaderProgram.material_Ka_Uniform = gl.getUniformLocation(shaderProgram, "material.Ka");
                 shaderProgram.material_Kd_Uniform = gl.getUniformLocation(shaderProgram, "material.Kd");
+                shaderProgram.material_Ks_Uniform = gl.getUniformLocation(shaderProgram, "material.Ks");
+                shaderProgram.material_shininess_Uniform = gl.getUniformLocation(shaderProgram, "material.shininess");
 
                 shaderProgram.colorUniform = gl.getUniformLocation(shaderProgram, "shadedColor");
             }
@@ -226,16 +243,10 @@
                 mat4.translate(mvMatrix, [translateX, translateY, -dist]);
                 mat4.multiply(mvMatrix, mouseRotationMatrix);
 
-                // Light (directional light)
-                /// Direction
-                var direction = [0.0, 1.0, 0.5];
-                var normalized_L = vec3.create();
-                vec3.normalize(direction, normalized_L);
-                gl.uniform3fv(shaderProgram.light_L_Uniform, normalized_L);
-
                 /// Intensities
                 gl.uniform3f(shaderProgram.light_Ia_Uniform, 0.3, 0.3, 0.3);
-                gl.uniform3f(shaderProgram.light_Ip_Uniform, 0.5, 0.5, 0.5);
+                gl.uniform3f(shaderProgram.light_Id_Uniform, 0.5, 0.5, 0.5);
+                gl.uniform3f(shaderProgram.light_Is_Uniform, 1.0, 1.0, 1.0);
 
                 // Teapot
                 if (modelVertexPositionBuffer[0])
@@ -243,6 +254,8 @@
                     // Surface properties
                     gl.uniform3f(shaderProgram.material_Ka_Uniform, 1.0, 0.5, 0.0);
                     gl.uniform3f(shaderProgram.material_Kd_Uniform, 1.0, 0.5, 0.0);
+                    gl.uniform3f(shaderProgram.material_Ks_Uniform, 0.5, 0.5, 0.5);
+                    gl.uniform1f(shaderProgram.material_shininess_Uniform, 32.0);
 
                     // Draw
                     mvPushMatrix();
@@ -271,6 +284,8 @@
                     // Surface properties
                     gl.uniform3f(shaderProgram.material_Ka_Uniform, 0.0, 0.5, 1.0);
                     gl.uniform3f(shaderProgram.material_Kd_Uniform, 0.0, 0.5, 1.0);
+                    gl.uniform3f(shaderProgram.material_Ks_Uniform, 0.5, 0.5, 0.5);
+                    gl.uniform1f(shaderProgram.material_shininess_Uniform, 32.0);
 
                     // Draw
                     mvPushMatrix();
