@@ -434,7 +434,17 @@
 
                 sendMatricesToLightShader();
 
-                
+                // Floor (quad)
+                if (quadVertexPositionBuffer)
+                {
+                    // Draw
+                    gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexPositionBuffer);
+                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, quadVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, quadVertexIndexBuffer);
+
+                    gl.drawElements(gl.TRIANGLES, quadVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+                }
 
                 // Teapot
                 if (modelVertexPositionBuffer[0])
@@ -611,7 +621,7 @@
             function renderingLoop() {
                 requestAnimFrame(renderingLoop);
                 handleKeys();
-                //drawSceneFromLight();
+                drawSceneFromLight();
                 drawSceneFromCamera();
             }
 
