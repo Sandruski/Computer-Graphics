@@ -258,7 +258,7 @@
 
                 // -----
 
-                gl.useProgram(0);
+                gl.useProgram(null);
             }
 
             var rttFramebuffer;
@@ -272,20 +272,28 @@
 
                 rttTexture = gl.createTexture();
                 gl.bindTexture(gl.TEXTURE_2D, rttTexture);
-                gl.texParameteri(gl.TEXTURE_2D, gl_TEXTURE_MAG_FILTER, gl.LINEAR);
-                gl.texParameteri(gl.TEXTURE_2D, gl_TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, rttFramebuffer.width, rttFramebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
                 var renderbuffer = gl.createRenderbuffer();
                 gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
                 gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, rttFramebuffer.width, rttFramebuffer.height);
 
-                fl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, rttTexture, 0);
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, rttTexture, 0);
                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 
                 gl.bindTexture(gl.TEXTURE_2D, null);
                 gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            }
+
+            var mvLightMatrix = mat4.create();
+            var pLightMatrix = mat4.create();
+
+            function sendMatricesToLightShader() {
+                gl.uniformMatrix4fv(lightProgram.projectionMatrixLightUniform, false, pLightMatrix);
+                gl.uniformMatrix4fv(lightProgram.modelViewMatrixLightUniform, false, mvLightMatrix);
             }
 
             var mvMatrix = mat4.create();
@@ -299,6 +307,9 @@
                 mat4.toInverseMat3(mvMatrix, normalMatrix);
                 mat3.transpose(normalMatrix);
                 gl.uniformMatrix3fv(shaderProgram.nMatrixUniform, false, normalMatrix);
+
+                gl.uniformMatrix4fv(shaderProgram.projectionMatrixLightUniform, false, pLightMatrix);
+                gl.uniformMatrix4fv(shaderProgram.modelViewMatrixLightUniform, false, mvLightMatrix);
             }
 
             function loadModelOnGPU() {
@@ -357,6 +368,8 @@
                 modelVertexIndexBuffer.push(indexObj);
             }
 
+            var lightDist = 10.0;
+
             function drawSceneFromLight() {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer);
 
@@ -368,6 +381,13 @@
                 //gl.enableVertexAttribArray(lightProgram.vertexPositionAttribute);
 
                 // RENDER SCENE
+                mat4.ortho(pLightMatrix, -5.0, 5.0, -5.0, 5.0, 0.0, 30.0);
+
+                mat4.identity(mvLightMatrix);
+                mat4.translate(mvLightMatrix, [0.0, 0.0, -lightDist]);
+
+                sendMatricesToLightShader();
+
                 // Teapot
                 if (modelVertexPositionBuffer[0])
                 {
@@ -376,9 +396,7 @@
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[0].itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[0]);
-                
-                    //sendMatricesToShader();
-
+            
                     gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer[0].numItems, gl.UNSIGNED_SHORT, 0);
                 }
 
@@ -390,8 +408,6 @@
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[1].itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[1]);
-                    
-                    //sendMatricesToShader();
 
                     gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer[1].numItems, gl.UNSIGNED_SHORT, 0);
                 }
@@ -403,8 +419,9 @@
 
             var fov = 45.0;
             var zNear = 0.1;
-            var zFar = 300.0;
-            var dist = 4.0;
+            var zFar = 20.0;
+
+            var camDist = 10.0;
 
             var colors = [[1.0, 0.5, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0]];
 
@@ -414,11 +431,11 @@
   
                 gl.useProgram(shaderProgram);
 
+                // RENDER SCENE
                 mat4.perspective(fov, gl.viewportWidth / gl.viewportHeight, zNear, zFar, pMatrix);
 
-                // RENDER SCENE
                 mat4.identity(mvMatrix);
-                mat4.translate(mvMatrix, [translateX, translateY, -dist]);
+                mat4.translate(mvMatrix, [translateX, translateY, -camDist]);
                 mat4.multiply(mvMatrix, mouseRotationMatrix);
 
                 /// Intensities
@@ -515,6 +532,7 @@
 
                 initGL(canvas);
                 initShaders();
+                initTextureFramebuffer();
  
                 loadModelOnGPU();
 
