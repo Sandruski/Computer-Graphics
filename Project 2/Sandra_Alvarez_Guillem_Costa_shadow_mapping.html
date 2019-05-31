@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>WebGL Application</title>
+        <title>Shadow Mapping - Sandra Alvarez & Guillem Costa</title>
         <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
         <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
@@ -421,7 +421,7 @@
 
             var lightPosX = -10.0;
             var lightPosY = 20.0;
-            var lightDist = 10.0; // lightPosZ
+            var lightDist = 8.0; // lightPosZ
 
             function drawSceneFromLight() {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer);
@@ -451,9 +451,7 @@
                     mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
                     
                     gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexPositionBuffer);
-                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, quadVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexNormalBuffer);
-                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, quadVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+                    gl.vertexAttribPointer(lightProgram.vertexPositionAttribute, quadVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, quadVertexIndexBuffer);
                     
@@ -471,13 +469,11 @@
                     // Draw
                     mvLightPushMatrix();
                     
-                    mat4.translate(mvLightMatrix, [-0.4, -0.1, 0.0]);
+                    mat4.translate(mvLightMatrix, [-0.3, -0.1, 0.0]);
                     mat4.scale(mvLightMatrix, [0.02, 0.02, 0.02]);
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
-                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer[i]);
-                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, modelVertexNormalBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
+                    gl.vertexAttribPointer(lightProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[i]);
                     
@@ -495,14 +491,12 @@
                     // Draw
                     mvLightPushMatrix();
                     
-                    mat4.translate(mvLightMatrix, [0.4, -0.3, 0.0]);
+                    mat4.translate(mvLightMatrix, [0.3, -0.3, 0.0]);
                     mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
                     mat4.scale(mvLightMatrix, [0.3, 0.3, 0.3]);
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
-                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer[i]);
-                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, modelVertexNormalBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
+                    gl.vertexAttribPointer(lightProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[i]);
 
@@ -554,8 +548,7 @@
                 mat4.lookAt(lightPos, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], mvLightMatrix);
 
                 /// Direction
-                //var direction = [0.0, 1.0, 0.5];
-                var lightPos = [lightPosX, lightPosY, -lightDist];
+                lightPos = [lightPosX, lightPosY, -lightDist];
                 var normalized_L = vec3.create();
                 vec3.normalize(lightPos, normalized_L);
                 gl.uniform3fv(shaderProgram.light_L_Uniform, normalized_L);
@@ -617,12 +610,12 @@
                     // Draw
                     mvPushMatrix();
                     
-                    mat4.translate(mvMatrix, [-0.4, -0.1, 0.0]);
+                    mat4.translate(mvMatrix, [-0.3, -0.1, 0.0]);
                     mat4.scale(mvMatrix, [0.02, 0.02, 0.02]);
 
                     mvLightPushMatrix();
 
-                    mat4.translate(mvLightMatrix, [-0.4, -0.1, 0.0]);
+                    mat4.translate(mvLightMatrix, [-0.3, -0.1, 0.0]);
                     mat4.scale(mvLightMatrix, [0.02, 0.02, 0.02]);
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
@@ -653,13 +646,13 @@
                     // Draw
                     mvPushMatrix();
                     
-                    mat4.translate(mvMatrix, [0.4, -0.3, 0.0]);
+                    mat4.translate(mvMatrix, [0.3, -0.3, 0.0]);
                     mat4.rotate(mvMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
                     mat4.scale(mvMatrix, [0.3, 0.3, 0.3]);
 
                     mvLightPushMatrix();
                     
-                    mat4.translate(mvLightMatrix, [0.4, -0.3, 0.0]);
+                    mat4.translate(mvLightMatrix, [0.3, -0.3, 0.0]);
                     mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
                     mat4.scale(mvLightMatrix, [0.3, 0.3, 0.3]);
 
