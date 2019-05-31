@@ -139,7 +139,6 @@
 
                 vec3 shadedColor = ambient + (diffuse + specular) * lightFactor;
                 gl_FragColor = vec4(shadedColor, 1.0);
-                //gl_FragColor = texture2D(lightDepth, positionTextureLightspace.xy);
             }
         </script>      
         
@@ -420,7 +419,7 @@
                 modelVertexIndexBuffer.push(indexObj);
             }
 
-            var lightPosX = 5.0;
+            var lightPosX = -10.0;
             var lightPosY = 20.0;
             var lightDist = 10.0; // lightPosZ
 
@@ -439,7 +438,7 @@
                 
                 mat4.identity(mvLightMatrix);
 
-                var lightPos = [lightPosX, lightPosY, -lightDist];
+                var lightPos = [lightPosX, lightPosY, lightDist];
                 mat4.lookAt(lightPos, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], mvLightMatrix);
 
                 // Floor (quad)
@@ -527,7 +526,7 @@
             var zNear = 0.1;
             var zFar = 20.0;
 
-            var defaultCamDist = 10.0;
+            var defaultCamDist = 3.0;
             var camDist = 0.0;
 
             function drawSceneFromCamera() {
@@ -551,7 +550,7 @@
                 
                 mat4.identity(mvLightMatrix);
 
-                var lightPos = [lightPosX, lightPosY, -lightDist];
+                var lightPos = [lightPosX, lightPosY, lightDist];
                 mat4.lookAt(lightPos, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], mvLightMatrix);
 
                 /// Direction
@@ -828,7 +827,7 @@
                 return degrees * (Math.PI / 180);
             }
 
-            var fixedDt = 1 / 60;
+            var fixedDt = 1.0 / 60.0;
 
             function handleMouseMove(event){
                 if (!mouseDown){
