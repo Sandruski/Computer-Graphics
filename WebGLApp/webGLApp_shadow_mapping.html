@@ -230,6 +230,7 @@
                 shaderProgram.material_Kd_Uniform = gl.getUniformLocation(shaderProgram, "material.Kd");
                 shaderProgram.material_Ks_Uniform = gl.getUniformLocation(shaderProgram, "material.Ks");
                 shaderProgram.material_shininess_Uniform = gl.getUniformLocation(shaderProgram, "material.shininess");
+                shaderProgram.lightDepthUniform = gl.getUniformLocation(shaderProgram, "lightDepth"); 
 
                 shaderProgram.modelViewMatrixLightUniform = gl.getUniformLocation(shaderProgram, "modelViewMatrixLight");
                 shaderProgram.projectionMatrixLightUniform = gl.getUniformLocation(shaderProgram, "projectionMatrixLight");
@@ -282,7 +283,7 @@
                 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, rttTexture, 0);
                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 
-                //gl.bindTexture(gl.TEXTURE_2D, null);
+                gl.bindTexture(gl.TEXTURE_2D, null);
                 gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
@@ -439,7 +440,7 @@
                 {
                     // Draw
                     gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexPositionBuffer);
-                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, quadVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+                    gl.vertexAttribPointer(lightProgram.vertexPositionAttribute, quadVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, quadVertexIndexBuffer);
 
@@ -451,7 +452,7 @@
                 {
                     // Draw
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[0]);
-                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[0].itemSize, gl.FLOAT, false, 0, 0);
+                    gl.vertexAttribPointer(lightProgram.vertexPositionAttribute, modelVertexPositionBuffer[0].itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[0]);
             
@@ -463,7 +464,7 @@
                 {
                     // Draw
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[1]);
-                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[1].itemSize, gl.FLOAT, false, 0, 0);
+                    gl.vertexAttribPointer(lightProgram.vertexPositionAttribute, modelVertexPositionBuffer[1].itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[1]);
 
@@ -505,6 +506,9 @@
                 gl.uniform3f(shaderProgram.light_Ia_Uniform, 0.3, 0.3, 0.3);
                 gl.uniform3f(shaderProgram.light_Id_Uniform, 0.5, 0.5, 0.5);
                 gl.uniform3f(shaderProgram.light_Is_Uniform, 1.0, 1.0, 1.0);
+
+                gl.bindTexture(gl.TEXTURE_2D, rttTexture);
+                gl.uniform1i(shaderProgram.lightDepthUniform, 0);            
 
                 // Floor (quad)
                 if (quadVertexPositionBuffer)
@@ -597,8 +601,10 @@
 
                 // -----
 
-                gl.disableVertexAttribArray(lightProgram.vertexPositionAttribute);
-                gl.disableVertexAttribArray(lightProgram.vertexNormalAttribute);
+                gl.bindTexture(gl.TEXTURE_2D, null);
+
+                gl.disableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+                gl.disableVertexAttribArray(shaderProgram.vertexNormalAttribute);
 
                 gl.useProgram(null);
             }
