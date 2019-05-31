@@ -1,0 +1,92 @@
+{
+    "object": {
+        "uuid": "6F2EE2E6-BCB0-4E90-8716-DB66953C282E",
+        "children": [{
+            "name": "plane_obj_1",
+            "uuid": "ABE73158-F64A-3EA0-9A9C-A083A9823E45",
+            "matrix": [-1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1],
+            "visible": true,
+            "type": "Mesh",
+            "material": "B92F5ACA-E24A-3A69-B2DD-69B8C9C5682C",
+            "castShadow": true,
+            "receiveShadow": true,
+            "geometry": "BB96AA81-3B40-3984-9936-FC48640F992C"
+        }],
+        "matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+        "type": "Scene"
+    },
+    "materials": [{
+        "emissive": 0,
+        "specular": 131586,
+        "vertexColors": false,
+        "type": "MeshPhongMaterial",
+        "depthTest": true,
+        "color": 11579568,
+        "shininess": 50,
+        "ambient": 11579568,
+        "blending": "NormalBlending",
+        "name": "b0b0b0",
+        "uuid": "B92F5ACA-E24A-3A69-B2DD-69B8C9C5682C",
+        "side": 2,
+        "depthWrite": true
+    }],
+    "metadata": {
+        "version": 4.4,
+        "generator": "io_three",
+        "type": "Object"
+    },
+    "images": [],
+    "animations": [{
+        "name": "default",
+        "tracks": [],
+        "fps": 29
+    }],
+    "textures": [],
+    "geometries": [{
+        "uuid": "BB96AA81-3B40-3984-9936-FC48640F992C",
+        "type": "Geometry",
+        "materials": [{
+            "colorEmissive": [0,0,0],
+            "DbgName": "b0b0b0",
+            "depthTest": true,
+            "visible": true,
+            "specularCoef": 50,
+            "wireframe": false,
+            "opacity": 1,
+            "transparent": false,
+            "DbgIndex": 0,
+            "doubleSided": true,
+            "blending": "NormalBlending",
+            "DbgColor": 15658734,
+            "shading": "phong",
+            "colorAmbient": [0.690196,0.690196,0.690196],
+            "depthWrite": true,
+            "colorSpecular": [0.009961,0.009961,0.009961],
+            "colorDiffuse": [0.690196,0.690196,0.690196]
+        }],
+        "data": {
+            "bones": [],
+            "uvs": [[0,0,1,0,1,1,0,1]],
+            "animations": [],
+            "metadata": {
+                "bones": 0,
+                "version": 3,
+                "vertices": 4,
+                "materials": 1,
+                "morphTargets": 0,
+                "normals": 1,
+                "generator": "io_three",
+                "faces": 1,
+                "uvs": 1
+            },
+            "influencesPerVertex": 2,
+            "skinWeights": [],
+            "name": "plane_obj_1Geometry",
+            "vertices": [-6.69204,-6.69204,0,6.69204,-6.69204,0,6.69204,6.69204,0,-6.69204,6.69204,0],
+            "skinIndices": [],
+            "morphTargets": [],
+            "normals": [0,0,1],
+            "faces": [43,0,1,2,3,0,0,1,2,3,0,0,0,0]
+        }
+    }]
+}
