@@ -341,10 +341,10 @@
                 gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexNormalBuffer);
                 var quadVerticesNormal = [
                     // Left triangle
-                    0.0, 1.0, 0.0,
-                    0.0, 1.0, 0.0,
-                    0.0, 1.0, 0.0,
-                    0.0, 1.0, 0.0
+                    0.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0
                 ];
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quadVerticesNormal), gl.STATIC_DRAW);
                 quadVertexNormalBuffer.itemSize = 3;
@@ -449,9 +449,8 @@
                     mvLightPushMatrix();
 
                     mat4.translate(mvLightMatrix, [0.0, -0.5, 0.0]);
-                    mat4.scale(mvLightMatrix, [5.0, 5.0, 5.0]);
                     mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
-
+                    
                     gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexPositionBuffer);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, quadVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexNormalBuffer);
@@ -473,8 +472,8 @@
                     // Draw
                     mvLightPushMatrix();
                     
-                    mat4.translate(mvLightMatrix, [-1.0, 0.0, 0.0]);
-                    mat4.scale(mvLightMatrix, [0.05, 0.05, 0.05]);
+                    mat4.translate(mvLightMatrix, [-0.4, -0.1, 0.0]);
+                    mat4.scale(mvLightMatrix, [0.02, 0.02, 0.02]);
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
@@ -497,9 +496,9 @@
                     // Draw
                     mvLightPushMatrix();
                     
-                    mat4.translate(mvLightMatrix, [1.0, -0.3, 0.0]);
-                    mat4.scale(mvLightMatrix, [0.8, 0.8, 0.8]);
+                    mat4.translate(mvLightMatrix, [0.4, -0.3, 0.0]);
                     mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
+                    mat4.scale(mvLightMatrix, [0.3, 0.3, 0.3]);
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
@@ -583,14 +582,12 @@
                     // Draw
                     mvPushMatrix();
 
-                    mat4.translate(mvMatrix, [0.0, -0.5, 0.0]);
-                    mat4.scale(mvMatrix, [5.0, 5.0, 5.0]);
+                    mat4.translate(mvMatrix, [0.0, -0.3, 0.0]);
                     mat4.rotate(mvMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
 
                     mvLightPushMatrix();
 
                     mat4.translate(mvLightMatrix, [0.0, -0.5, 0.0]);
-                    mat4.scale(mvLightMatrix, [5.0, 5.0, 5.0]);
                     mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexPositionBuffer);
@@ -621,13 +618,13 @@
                     // Draw
                     mvPushMatrix();
                     
-                    mat4.translate(mvMatrix, [-1.0, 0.0, 0.0]);
-                    mat4.scale(mvMatrix, [0.05, 0.05, 0.05]);
+                    mat4.translate(mvMatrix, [-0.4, -0.1, 0.0]);
+                    mat4.scale(mvMatrix, [0.02, 0.02, 0.02]);
 
                     mvLightPushMatrix();
 
-                    mat4.translate(mvLightMatrix, [-1.0, 0.0, 0.0]);
-                    mat4.scale(mvLightMatrix, [0.05, 0.05, 0.05]);
+                    mat4.translate(mvLightMatrix, [-0.4, -0.1, 0.0]);
+                    mat4.scale(mvLightMatrix, [0.02, 0.02, 0.02]);
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
@@ -657,15 +654,15 @@
                     // Draw
                     mvPushMatrix();
                     
-                    mat4.translate(mvMatrix, [1.0, -0.3, 0.0]);
-                    mat4.scale(mvMatrix, [0.8, 0.8, 0.8]);
+                    mat4.translate(mvMatrix, [0.4, -0.3, 0.0]);
                     mat4.rotate(mvMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
+                    mat4.scale(mvMatrix, [0.3, 0.3, 0.3]);
 
                     mvLightPushMatrix();
                     
-                    mat4.translate(mvLightMatrix, [1.0, -0.3, 0.0]);
-                    mat4.scale(mvLightMatrix, [0.8, 0.8, 0.8]);
+                    mat4.translate(mvLightMatrix, [0.4, -0.3, 0.0]);
                     mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
+                    mat4.scale(mvLightMatrix, [0.3, 0.3, 0.3]);
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
@@ -742,8 +739,8 @@
 
                 gl.clearColor(0.0, 0.0, 0.0, 1.0);
                 gl.enable(gl.DEPTH_TEST);
-                gl.enable(gl.CULL_FACE);
-                gl.cullFace(gl.BACK);
+                //gl.enable(gl.CULL_FACE);
+                //gl.cullFace(gl.BACK);
 
                 camDist = defaultCamDist;
 
