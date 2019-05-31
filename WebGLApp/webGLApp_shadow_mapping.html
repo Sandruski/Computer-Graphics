@@ -490,7 +490,8 @@
             var zNear = 0.1;
             var zFar = 20.0;
 
-            var camDist = 10.0;
+            var defaultCamDist = 10.0;
+            var camDist = 0.0;
 
             function drawSceneFromCamera() {
                 gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -662,6 +663,8 @@
                 //gl.enable(gl.CULL_FACE);
                 //gl.cullFace(gl.BACK);
 
+                camDist = defaultCamDist;
+
                 document.onkeydown = handleKeyDown;
                 document.onkeyup = handleKeyUp;
 
@@ -707,14 +710,14 @@
                 translateX = 0;
                 translateY = 0;
                 mat4.identity(mouseRotationMatrix); 
-                camDist = 4.0;
+                camDist = defaultCamDist;
                 }
             }
 
-            var lastMouseX = null;
-            var lastMouseY = null;
+            var lastMouseX = 0;
+            var lastMouseY = 0;
             var mouseDown = false;
-            var button = null;
+            var button = 0;
 
             function handleMouseDown(event){
                 mouseDown = true;
@@ -736,8 +739,8 @@
                 lastMouseY = event.clientY;
             }
 
-            var translateX = null;
-            var translateY = null;
+            var translateX = 0;
+            var translateY = 0;
 
             var mouseRotationMatrix = mat4.create();
             mat4.identity(mouseRotationMatrix);
