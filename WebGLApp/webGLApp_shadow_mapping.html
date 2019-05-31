@@ -137,8 +137,9 @@
                 if (depthFromLightTexture + 0.001 > positionTextureLightspace.z)
                     lightFactor = 1.0;
 
-                vec3 shadedColor = ambient + (diffuse + specular);
+                vec3 shadedColor = ambient + (diffuse + specular) * lightFactor;
                 gl_FragColor = vec4(shadedColor, 1.0);
+                //gl_FragColor = texture2D(lightDepth, positionTextureLightspace.xy);
             }
         </script>      
         
@@ -419,7 +420,9 @@
                 modelVertexIndexBuffer.push(indexObj);
             }
 
-            var lightDist = 10.0;
+            var lightPosX = 5.0;
+            var lightPosY = 20.0;
+            var lightDist = 10.0; // lightPosZ
 
             function drawSceneFromLight() {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer);
@@ -432,23 +435,35 @@
                 gl.enableVertexAttribArray(lightProgram.vertexPositionAttribute);
 
                 // RENDER SCENE
-                mat4.ortho(pLightMatrix, -5.0, 5.0, -5.0, 5.0, 0.0, 30.0);
-
+                mat4.ortho(-5.0, 5.0, -5.0, 5.0, 0.0, 30.0, pLightMatrix);
+                
                 mat4.identity(mvLightMatrix);
-                mat4.translate(mvLightMatrix, [0.0, 0.0, -lightDist]);
 
-                sendMatricesToLightShader();
+                var lightPos = [lightPosX, lightPosY, -lightDist];
+                mat4.lookAt(lightPos, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], mvLightMatrix);
 
                 // Floor (quad)
                 if (quadVertexPositionBuffer)
                 {
                     // Draw
+                    mvLightPushMatrix();
+
+                    mat4.translate(mvLightMatrix, [0.0, -0.5, 0.0]);
+                    mat4.scale(mvLightMatrix, [5.0, 5.0, 5.0]);
+                    mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexPositionBuffer);
-                    gl.vertexAttribPointer(lightProgram.vertexPositionAttribute, quadVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, quadVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexNormalBuffer);
+                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, quadVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, quadVertexIndexBuffer);
+                    
+                    sendMatricesToLightShader();
 
                     gl.drawElements(gl.TRIANGLES, quadVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+                
+                    mvLightPopMatrix();
                 }
 
                 // Teapot
@@ -456,12 +471,23 @@
                 if (modelVertexPositionBuffer[i])
                 {
                     // Draw
+                    mvLightPushMatrix();
+                    
+                    mat4.translate(mvLightMatrix, [-1.0, 0.0, 0.0]);
+                    mat4.scale(mvLightMatrix, [0.05, 0.05, 0.05]);
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
-                    gl.vertexAttribPointer(lightProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
+                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer[i]);
+                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, modelVertexNormalBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[i]);
-            
+                    
+                    sendMatricesToLightShader();
+
                     gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer[i].numItems, gl.UNSIGNED_SHORT, 0);
+                
+                    mvLightPopMatrix();
                 }
 
                 // Laptop
@@ -469,12 +495,24 @@
                 if (modelVertexPositionBuffer[i])
                 {
                     // Draw
+                    mvLightPushMatrix();
+                    
+                    mat4.translate(mvLightMatrix, [1.0, -0.3, 0.0]);
+                    mat4.scale(mvLightMatrix, [0.8, 0.8, 0.8]);
+                    mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
-                    gl.vertexAttribPointer(lightProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
+                    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer[i]);
+                    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, modelVertexNormalBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelVertexIndexBuffer[i]);
 
+                    sendMatricesToLightShader();
+
                     gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer[i].numItems, gl.UNSIGNED_SHORT, 0);
+                
+                    mvLightPopMatrix();
                 }
                
                 // -----
@@ -510,10 +548,18 @@
                 mat4.multiply(mvMatrix, mouseRotationMatrix);
 
                 // Light (directional light)
+                mat4.ortho(-5.0, 5.0, -5.0, 5.0, 0.0, 30.0, pLightMatrix);
+                
+                mat4.identity(mvLightMatrix);
+
+                var lightPos = [lightPosX, lightPosY, -lightDist];
+                mat4.lookAt(lightPos, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], mvLightMatrix);
+
                 /// Direction
-                var direction = [0.0, 1.0, 0.5];
+                //var direction = [0.0, 1.0, 0.5];
+                var lightPos = [lightPosX, lightPosY, -lightDist];
                 var normalized_L = vec3.create();
-                vec3.normalize(direction, normalized_L);
+                vec3.normalize(lightPos, normalized_L);
                 gl.uniform3fv(shaderProgram.light_L_Uniform, normalized_L);
 
                 /// Intensities
@@ -541,6 +587,12 @@
                     mat4.scale(mvMatrix, [5.0, 5.0, 5.0]);
                     mat4.rotate(mvMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
 
+                    mvLightPushMatrix();
+
+                    mat4.translate(mvLightMatrix, [0.0, -0.5, 0.0]);
+                    mat4.scale(mvLightMatrix, [5.0, 5.0, 5.0]);
+                    mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexPositionBuffer);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, quadVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, quadVertexNormalBuffer);
@@ -552,6 +604,7 @@
 
                     gl.drawElements(gl.TRIANGLES, quadVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
                 
+                    mvLightPopMatrix();
                     mvPopMatrix();
                 }
 
@@ -571,6 +624,11 @@
                     mat4.translate(mvMatrix, [-1.0, 0.0, 0.0]);
                     mat4.scale(mvMatrix, [0.05, 0.05, 0.05]);
 
+                    mvLightPushMatrix();
+
+                    mat4.translate(mvLightMatrix, [-1.0, 0.0, 0.0]);
+                    mat4.scale(mvLightMatrix, [0.05, 0.05, 0.05]);
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer[i]);
@@ -582,6 +640,7 @@
 
                     gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer[i].numItems, gl.UNSIGNED_SHORT, 0);
                 
+                    mvLightPopMatrix();
                     mvPopMatrix();
                 }
 
@@ -602,6 +661,12 @@
                     mat4.scale(mvMatrix, [0.8, 0.8, 0.8]);
                     mat4.rotate(mvMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
 
+                    mvLightPushMatrix();
+                    
+                    mat4.translate(mvLightMatrix, [1.0, -0.3, 0.0]);
+                    mat4.scale(mvLightMatrix, [0.8, 0.8, 0.8]);
+                    mat4.rotate(mvLightMatrix, 3.1415 * -0.5, [1.0, 0.0, 0.0]);
+
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexPositionBuffer[i]);
                     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, modelVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
                     gl.bindBuffer(gl.ARRAY_BUFFER, modelVertexNormalBuffer[i]);
@@ -613,6 +678,7 @@
 
                     gl.drawElements(gl.TRIANGLES, modelVertexIndexBuffer[i].numItems, gl.UNSIGNED_SHORT, 0);
                 
+                    mvLightPopMatrix();
                     mvPopMatrix();
                 }
 
@@ -641,6 +707,21 @@
                 mvMatrix = mvMatrixStack.pop();
             }
 
+            var mvLightMatrixStack = [];
+
+            function mvLightPushMatrix(){
+                var copy = mat4.create();
+                mat4.set(mvLightMatrix, copy);
+                mvLightMatrixStack.push(copy);
+            }
+
+            function mvLightPopMatrix(){
+                if (mvLightMatrixStack.length == 0){
+                    throw "Invalid popMatrix!";
+                }
+                mvLightMatrix = mvLightMatrixStack.pop();
+            }
+
             function renderingLoop() {
                 requestAnimFrame(renderingLoop);
                 handleKeys();
@@ -661,8 +742,8 @@
 
                 gl.clearColor(0.0, 0.0, 0.0, 1.0);
                 gl.enable(gl.DEPTH_TEST);
-                //gl.enable(gl.CULL_FACE);
-                //gl.cullFace(gl.BACK);
+                gl.enable(gl.CULL_FACE);
+                gl.cullFace(gl.BACK);
 
                 camDist = defaultCamDist;
 
